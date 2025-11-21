@@ -10,6 +10,35 @@
 
 #include "file_manager.h"
 
+/* ====================== COLORS & ICONS ====================== */
+#define RESET   "\033[0m"
+#define RED     "\033[31m"      // Màu đỏ
+#define GREEN   "\033[32m"      // Màu xanh lá
+#define YELLOW  "\033[33m"      // Màu vàng
+#define BLUE    "\033[34m"      // Màu xanh dương
+#define MAGENTA "\033[35m"      // Màu tím
+#define CYAN    "\033[36m"      // Màu xanh lơ
+#define BOLD    "\033[1m"       // In đậm
+
+// Hàm lấy Icon dựa trên tên file
+const char* get_file_icon(const char *filename, mode_t mode) {
+    if (S_ISDIR(mode)) return "📂";
+    if (S_ISLNK(mode)) return "🔗";
+    
+    const char *ext = strrchr(filename, '.');
+    if (!ext) return "📄"; // Mặc định
+
+    if (strcmp(ext, ".c") == 0) return "🇨 ";
+    if (strcmp(ext, ".h") == 0) return "🏷️ ";
+    if (strcmp(ext, ".txt") == 0) return "📝";
+    if (strcmp(ext, ".pdf") == 0) return "📕";
+    if (strcmp(ext, ".jpg") == 0 || strcmp(ext, ".png") == 0) return "🖼️ ";
+    if (strcmp(ext, ".exe") == 0 || strcmp(ext, ".sh") == 0) return "🚀";
+    if (strcmp(ext, ".zip") == 0 || strcmp(ext, ".tar") == 0) return "📦";
+    
+    return "📄";
+}
+
 /* ====================== WILDCARD EXPAND ====================== */
 
 char **expand_pattern(const char *pattern, int *count) {
@@ -87,6 +116,16 @@ char *human_size(off_t bytes) {
     return buf;
 }
 
+void print_colored_perms(const char *perm_str) {
+    for (int i = 0; i < 9; i++) {
+        if (perm_str[i] == 'r') printf("%s%c", YELLOW, perm_str[i]);
+        else if (perm_str[i] == 'w') printf("%s%c", RED, perm_str[i]);
+        else if (perm_str[i] == 'x') printf("%s%c", GREEN, perm_str[i]);
+        else printf("%s%c", RESET, perm_str[i]); // Dấu gạch ngang
+    }
+    printf("%s", RESET); // Reset màu
+}
+
 /* ====================== PRINT FILE INFO ====================== */
 
 void print_file_info(struct file_info *info) {
@@ -96,19 +135,40 @@ void print_file_info(struct file_info *info) {
     determine_file_type(info->mode, type_str);
     convert_permissions(info->mode, perm_str);
 
-    printf("\n📁 FILE: %s\n", info->filename);
-    printf("├─ Type: %s (%s)\n", type_str, perm_str);
-    printf("├─ Size: %s (%ld bytes)\n", human_size(info->size), (long)info->size);
-    printf("├─ Owner: %s:%s\n", info->username, info->groupname);
-    printf("├─ Links: %ld\n", (long)info->nlink);
-    printf("├─ Inode: %ld\n", (long)info->inode);
+    // Chọn màu tiêu đề dựa trên loại file
+    const char *title_color = GREEN;
+    if (S_ISDIR(info->mode)) title_color = BLUE;
+    if (S_ISLNK(info->mode)) title_color = CYAN;
+    if (info->mode & S_IXUSR) title_color = MAGENTA; // File thực thi
 
-    printf("├─ Times:\n");
-    printf("│  ├─ Accessed:  %s\n", format_time(info->atime));
-    printf("│  ├─ Modified:  %s\n", format_time(info->mtime));
-    printf("│  └─ Changed:   %s\n", format_time(info->ctime));
+    // Lấy icon xịn
+    const char *icon = get_file_icon(info->filename, info->mode);
 
-    printf("└─ Device: %ld\n\n", (long)info->device);
+    printf("\n%s%s %s%s%s\n", title_color, icon, BOLD, info->filename, RESET);
+    
+    printf("  ├─ %sType:%s   %s", BOLD, RESET, type_str);
+    printf(" ("); print_colored_perms(perm_str); printf(")\n");
+    
+    // Tô màu size: Nếu > 1MB thì màu đỏ cảnh báo, ngược lại màu xanh
+    const char *size_color = (info->size > 1024*1024) ? RED : GREEN;
+    printf("  ├─ %sSize:%s   %s%s%s (%ld bytes)\n", 
+           BOLD, RESET, size_color, human_size(info->size), RESET, (long)info->size);
+    
+    printf("  ├─ %sOwner:%s  %s%s:%s%s\n", 
+           BOLD, RESET, CYAN, info->username, info->groupname, RESET);
+    
+    printf("  ├─ %sLinks:%s  %ld   %sInode:%s %ld\n", 
+           BOLD, RESET, (long)info->nlink, BOLD, RESET, (long)info->inode);
+
+    printf("  ├─ %sTimes:%s\n", BOLD, RESET);
+    printf("  │  ├─ Access: %s%s%s\n", YELLOW, format_time(info->atime), RESET);
+    printf("  │  ├─ Modify: %s%s%s\n", BLUE, format_time(info->mtime), RESET);
+    printf("  │  └─ Change: %s\n", format_time(info->ctime));
+
+    printf("  └─ %sDevice:%s %ld\n", BOLD, RESET, (long)info->device);
+    
+    // Thêm đường kẻ mờ để ngăn cách các file
+    printf("──────────────────────────────────────────────\n");
 }
 
 /* ====================== PROCESS FILE ====================== */
