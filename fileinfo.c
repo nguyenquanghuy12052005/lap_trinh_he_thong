@@ -109,10 +109,20 @@ char *format_time(time_t t) {
 
 char *human_size(off_t bytes) {
     static char buf[64];
-    if (bytes < 1024)
+    double size = (double)bytes; 
+
+    if (size < 1024) {
         snprintf(buf, sizeof(buf), "%ld bytes", (long)bytes);
-    else
-        snprintf(buf, sizeof(buf), "%.1f KB", bytes / 1024.0);
+    } 
+    else if (size < 1024 * 1024) {
+        snprintf(buf, sizeof(buf), "%.1f KB", size / 1024.0);
+    } 
+    else if (size < 1024 * 1024 * 1024) {
+        snprintf(buf, sizeof(buf), "%.1f MB", size / (1024.0 * 1024.0));
+    } 
+    else {
+        snprintf(buf, sizeof(buf), "%.2f GB", size / (1024.0 * 1024.0 * 1024.0));
+    }
     return buf;
 }
 
