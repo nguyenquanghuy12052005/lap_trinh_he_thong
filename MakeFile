@@ -1,0 +1,200 @@
+# Makefile for File Info Program
+
+# Compiler and flags
+CC = gcc
+CFLAGS = -Wall -Wextra -O2 -std=c11
+LDFLAGS = 
+
+# Target executable
+TARGET = fileinfo
+
+# Source files
+SRCS = fileinfo.c file_info_collector.c
+
+# Object files
+OBJS = $(SRCS:.c=.o)
+
+# Header files
+HEADERS = file_manager.h
+
+# Default target
+all: $(TARGET)
+	@echo "✅ Build completed successfully!"
+	@echo "Usage: ./$(TARGET) <file1> <file2> *.txt ..."
+
+# Build the executable
+$(TARGET): $(OBJS)
+	@echo "🔗 Linking..."
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	@echo "✅ Created: $(TARGET)"
+
+# Compile .c files to .o files
+%.o: %.c $(HEADERS)
+	@echo "🔨 Compiling $<..."
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean build artifacts
+clean:
+	@echo "🧹 Cleaning..."
+	rm -f $(OBJS) $(TARGET)
+	@echo "✅ Clean completed"
+
+# Install to system (requires sudo)
+install: $(TARGET)
+	@echo "📦 Installing to /usr/local/bin..."
+	sudo cp $(TARGET) /usr/local/bin/
+	sudo chmod 755 /usr/local/bin/$(TARGET)
+	@echo "✅ Installed successfully!"
+
+# Uninstall from system
+uninstall:
+	@echo "🗑️  Uninstalling..."
+	sudo rm -f /usr/local/bin/$(TARGET)
+	@echo "✅ Uninstalled successfully"
+
+# Run tests with sample files
+test: $(TARGET)
+	@echo "🧪 Running tests..."
+	@echo ""
+	./$(TARGET) $(TARGET) *.c *.h Makefile
+	@echo ""
+	@echo "✅ Tests completed"
+
+# Run with all C files
+run-c: $(TARGET)
+	./$(TARGET) *.c
+
+# Run with all header files
+run-h: $(TARGET)
+	./$(TARGET) *.h
+
+# === TEST VỚI CÁC FILE HỆ THỐNG ===
+
+# Test với device files (character devices)
+test-dev: $(TARGET)
+	@echo "🔍 Testing with character devices..."
+	./$(TARGET) /dev/null /dev/zero /dev/random /dev/urandom
+
+# Test với block devices (cần sudo)
+test-block: $(TARGET)
+	@echo "🔍 Testing with block devices (requires sudo)..."
+	@if [ -e /dev/sda ]; then \
+		sudo ./$(TARGET) /dev/sda /dev/sda1 2>/dev/null || echo "⚠️  Run with sudo for full info"; \
+	else \
+		echo "⚠️  /dev/sda not found, trying /dev/nvme0n1..."; \
+		sudo ./$(TARGET) /dev/nvme0n1 /dev/nvme0n1p1 2>/dev/null || echo "⚠️  No block devices found"; \
+	fi
+
+# Test với proc filesystem
+test-proc: $(TARGET)
+	@echo "🔍 Testing with /proc files..."
+	./$(TARGET) /proc/cpuinfo /proc/meminfo /proc/version
+
+# Test với sys filesystem  
+test-sys: $(TARGET)
+	@echo "🔍 Testing with /sys files..."
+	@if [ -e /sys/class/net/eth0 ]; then \
+		./$(TARGET) /sys/class/net/eth0/address /sys/class/net/eth0/mtu; \
+	else \
+		echo "⚠️  eth0 not found, trying other interfaces..."; \
+		./$(TARGET) /sys/class/net/*/address 2>/dev/null | head -20; \
+	fi
+
+# Test với system config files
+test-etc: $(TARGET)
+	@echo "🔍 Testing with system config files..."
+	./$(TARGET) /etc/passwd /etc/group /etc/hostname
+
+# Test với symbolic links
+test-links: $(TARGET)
+	@echo "🔍 Testing with symbolic links..."
+	./$(TARGET) /bin/sh /usr/bin/python* /lib*/ld-linux*.so.* 2>/dev/null | head -50
+
+# Test với special files (pipes, sockets)
+test-special: $(TARGET)
+	@echo "🔍 Testing with special files..."
+	@mkfifo /tmp/test_pipe 2>/dev/null || true
+	@./$(TARGET) /tmp/test_pipe
+	@rm -f /tmp/test_pipe
+
+# Chạy TẤT CẢ các test hệ thống
+test-all-system: test-dev test-proc test-etc test-links
+	@echo ""
+	@echo "✅ All system tests completed!"
+	@echo ""
+	@echo "💡 Để test block devices, chạy: make test-block"
+
+# Show help
+help:
+	@echo "Available targets:"
+	@echo ""
+	@echo "  %sBuild Commands:%s"
+	@echo "    make           - Build the program"
+	@echo "    make clean     - Remove all build files"
+	@echo "    make rebuild   - Clean and rebuild"
+	@echo "    make debug     - Build with debug symbols"
+	@echo "    make release   - Build optimized version"
+	@echo ""
+	@echo "  %sInstall Commands:%s"
+	@echo "    make install   - Install to /usr/local/bin (requires sudo)"
+	@echo "    make uninstall - Remove from /usr/local/bin"
+	@echo ""
+	@echo "  %sTest Commands:%s"
+	@echo "    make test              - Run basic tests"
+	@echo "    make test-dev          - Test with /dev/null, /dev/zero, etc."
+	@echo "    make test-block        - Test with /dev/sda (requires sudo)"
+	@echo "    make test-proc         - Test with /proc files"
+	@echo "    make test-sys          - Test with /sys files"
+	@echo "    make test-etc          - Test with /etc config files"
+	@echo "    make test-links        - Test with symbolic links"
+	@echo "    make test-special      - Test with pipes, sockets"
+	@echo "    make test-all-system   - Run all system tests"
+	@echo ""
+	@echo "  %sQuick Run:%s"
+	@echo "    make run-c     - Run with all .c files"
+	@echo "    make run-h     - Run with all .h files"
+	@echo ""
+	@echo "  %sUtility:%s"
+	@echo "    make check     - Check dependencies"
+	@echo "    make info      - Show project info"
+	@echo "    make help      - Show this help message"
+	@echo ""
+	@echo "  %sUsage examples:%s"
+	@echo "    ./$(TARGET) file.txt"
+	@echo "    ./$(TARGET) *.c *.h"
+	@echo "    ./$(TARGET) /dev/null /dev/zero"
+	@echo "    ./$(TARGET) /proc/cpuinfo"
+	@echo "    sudo ./$(TARGET) /dev/sda"
+
+# Rebuild everything
+rebuild: clean all
+
+# Check for dependencies
+check:
+	@echo "🔍 Checking dependencies..."
+	@command -v gcc >/dev/null 2>&1 || { echo "❌ gcc not found"; exit 1; }
+	@command -v md5sum >/dev/null 2>&1 || { echo "⚠️  md5sum not found (MD5 hashing will not work)"; }
+	@echo "✅ All dependencies OK"
+
+# Show file info
+info:
+	@echo "Project: File Information Viewer"
+	@echo "Files:"
+	@echo "  Sources: $(SRCS)"
+	@echo "  Headers: $(HEADERS)"
+	@echo "  Objects: $(OBJS)"
+	@echo "  Target:  $(TARGET)"
+
+# Phony targets (not actual files)
+.PHONY: all clean install uninstall test run-c run-h help rebuild check info \
+        test-dev test-block test-proc test-sys test-etc test-links test-special test-all-system
+
+# Debug build (with -g flag)
+debug: CFLAGS += -g -DDEBUG
+debug: clean $(TARGET)
+	@echo "🐛 Debug build completed"
+
+# Release build (optimized)
+release: CFLAGS += -O3 -march=native
+release: clean $(TARGET)
+	@echo "🚀 Release build completed"

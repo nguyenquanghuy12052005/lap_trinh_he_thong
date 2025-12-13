@@ -34,17 +34,17 @@ int main() {
     printf("\n\n");
     
     // TEST VỚI FILE THỰC TẾ TRONG MÁY
-    test_file("/bin/ls", "1. 🖥️ SYSTEM EXECUTABLE (/bin/ls)");
-    test_file("/etc/passwd", "2. ⚙️ SYSTEM CONFIG (/etc/passwd)");
-    test_file("/home", "3. 🏠 HOME DIRECTORY");
-    test_file("/dev/null", "4. 🔧 DEVICE FILE (/dev/null)");
+    test_file("/bin/ls", "1.  SYSTEM EXECUTABLE (/bin/ls)");
+    test_file("/etc/passwd", "2.  SYSTEM CONFIG (/etc/passwd)");
+    test_file("/home", "3.  HOME DIRECTORY");
+    test_file("/dev/null", "4.  DEVICE FILE (/dev/null)");
     
     // TEST VỚI FILE TRONG THƯ MỤC HIỆN TẠI
-    test_file("file_info_collector.c", "5. 📝 SOURCE CODE FILE");
-    test_file("file_manager.h", "6. 📄 HEADER FILE");
-    test_file(".", "7. 📁 CURRENT DIRECTORY");
-    test_file("..", "8. 📂 PARENT DIRECTORY");
+    test_file("file_info_collector.c", "5.  SOURCE CODE FILE");
+    test_file("file_manager.h", "6.  HEADER FILE");
+    test_file(".", "7.  CURRENT DIRECTORY");
+    test_file("..", "8.  PARENT DIRECTORY");
     
-    printf("✅ ACTUAL FILES TEST COMPLETED!\n");
+    printf(" ACTUAL FILES TEST COMPLETED!\n");
     return 0;
 }
