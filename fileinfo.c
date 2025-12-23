@@ -41,7 +41,7 @@ const char* get_file_icon(const char *filename, mode_t mode) {
     return "📄";
 }
 
-// WILDCARD EXPAND
+//Xử lý ký tự đại diện (Wildcard)
 char **expand_pattern(const char *pattern, int *count) {
     glob_t results;
     *count = 0;
@@ -140,7 +140,7 @@ char *format_time(time_t t) {
     return buf;
 }
 
-//FORMAT SIZE
+//Chuyển đổi byte sang MB
 char *human_size(off_t bytes) {
     static char buf[64];
     double size = (double)bytes;
@@ -170,7 +170,7 @@ void print_colored_perms(const char *perm_str) {
     printf("%s", RESET);
 }
 
-//PRINT FILE INFO 
+//vẽ giao diện ra màn hình
 void print_file_info(struct file_info *info) {
     char type_str[50];
     char perm_str[10];
@@ -272,7 +272,7 @@ int cmp_str(const void *a, const void *b) {
     return strcmp(*sa, *sb);
 }
 
-//MAIN 
+//MAIN: Kiểm tra tham số đầu vào, Chạy vòng lặp qua từng file và gọi process_file để in thông tin.
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Cách dùng: ./fileinfo <file1> <file2> *.txt ...\n");
